@@ -1,0 +1,20 @@
+./CUB_data/test_proto.mat,['test_proto']
+./CUB_data/test_cub_googlenet_bn.mat,['test_cub_googlenet_bn']
+./CUB_data/test_labels_cub.mat,['test_labels_cub']
+./CUB_data/train_cub_googlenet_bn.mat,['train_cub_googlenet_bn']
+./CUB_data/testclasses_id.mat,['testclasses_id']
+./CUB_data/train_attr.mat,['train_attr']
+./CUB1_data/res101.mat,"['features', 'labels']"
+./CUB1_data/original_att_splits.mat,"['allclasses_names', 'att', 'test_seen_loc', 'test_unseen_loc', 'train_loc', 'trainval_loc', 'val_loc']"
+./AwA_data/test_googlenet_bn.mat,['test_googlenet_bn']
+./AwA_data/test_labels.mat,['test_labels']
+./AwA_data/train_googlenet_bn.mat,['train_googlenet_bn']
+./AwA_data/testclasses_id.mat,['testclasses_id']
+./AwA2_data/att_splits.mat,"['allclasses_names', 'att', 'original_att', 'test_seen_loc', 'test_unseen_loc', 'train_loc', 'trainval_loc', 'val_loc']"
+./AwA2_data/res101.mat,"['features', 'image_files', 'labels']"
+./AwA1_data/res101.mat,"['image_files', 'features', 'labels']"
+./AwA1_data/original_att_splits.mat,"['allclasses_names', 'att', 'test_seen_loc', 'test_unseen_loc', 'train_loc', 'trainval_loc', 'val_loc']"
+./APY_data/att_splits.mat,"['allclasses_names', 'att', 'original_att', 'test_seen_loc', 'test_unseen_loc', 'train_loc', 'trainval_loc', 'val_loc']"
+./APY_data/res101.mat,"['image_files', 'features', 'labels']"
+./SUN_data/att_splits.mat,"['allclasses_names', 'att', 'original_att', 'test_seen_loc', 'test_unseen_loc', 'train_loc', 'trainval_loc', 'val_loc']"
+./SUN_data/res101.mat,"['image_files', 'features', 'labels']"
