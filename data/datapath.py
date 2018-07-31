@@ -2,7 +2,7 @@ import os
 import numpy as np
 from scipy import io
 
-cur_dir = os.path.abspath('..')
+cur_dir = os.path.abspath('.')
 data_dir = os.path.join(cur_dir, 'data')
 
 def dataloader(ds = 'CUB'):
