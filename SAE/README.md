@@ -9,7 +9,7 @@ sklearn
 
 # Data 
 Download data from [here](http://www.robots.ox.ac.uk/~lz/DEM_cvpr2017/data.zip) and `unzip it unzip data.zip`.  
-Then `cp` or `mv` [the dataloader.py](../data/dataloader.py) to the `data` directory.
+Then `cp` or `mv` [the datapath.py](../data/datapath.py) to the `data` directory.
 
 # Work
 
