@@ -1,5 +1,6 @@
 #  CUB
 key                    | value
+-----------------------|-------------
 test_proto             | (50, 312)
 test_cub_googlenet_bn  | (2933, 1024)
 test_labels_cub        | (2933, 1)
@@ -8,6 +9,7 @@ testclasses_id         | (50, 1)
 train_attr             | (8855, 312)
 #  CUB1
 key              | value
+-----------------|-------------
 features         | (2048, 11788)
 labels           | (11788, 1)
 allclasses_names | (200, 1)
@@ -19,12 +21,14 @@ trainval_loc     | (7057, 1)
 val_loc          | (2946, 1)
 #  AwA
 key                | value
+-------------------|-------------
 test_googlenet_bn  | (6180, 1024)
 test_labels        | (6180, 1)
 train_googlenet_bn | (24295, 1024)
 testclasses_id     | (10, 1)
 #  AwA1
 key              | value
+-----------------|-------------
 image_files      | (30475, 1)
 features         | (2048, 30475)
 labels           | (30475, 1)
@@ -37,6 +41,7 @@ trainval_loc     | (19832, 1)
 val_loc          | (7926, 1)
 #  AwA2
 key              | value
+-----------------|-------------
 allclasses_names | (50, 1)
 att              | (85, 50)
 original_att     | (85, 50)
@@ -50,6 +55,7 @@ image_files      | (37322, 1)
 labels           | (37322, 1)
 #  APY
 key              | value
+-----------------|-------------
 allclasses_names | (32, 1)
 att              | (64, 32)
 original_att     | (64, 32)
@@ -63,6 +69,7 @@ features         | (2048, 15339)
 labels           | (15339, 1)
 #  SUN
 key              | value
+-----------------|-------------
 allclasses_names | (717, 1)
 att              | (102, 717)
 original_att     | (102, 717)
