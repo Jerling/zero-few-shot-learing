@@ -3,8 +3,9 @@
 Implementation for CVPR 2017 paper: Semantic Autoencoder for Zero-Shot Learning
 
 # requirements:
-
-look up [requirements.txt](./requirements.txt)
+numpy
+scipy
+sklearn
 
 # Data 
 Download data from [here](http://www.robots.ox.ac.uk/~lz/DEM_cvpr2017/data.zip) and `unzip it unzip data.zip`.  
