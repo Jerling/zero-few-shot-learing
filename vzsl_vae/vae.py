@@ -6,14 +6,16 @@ from torch import nn, optim
 from torch.nn import functional as F
 #  from torchvision import datasets, transforms
 from sklearn.model_selection import train_test_split
-#  from torchvision.utils import save_image
+from torchvision.utils import save_image
 import sys
 sys.path.append('./data')
 from datasets import dataloader
 
+H = 32
+W = 32
 
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
-parser.add_argument('--batch-size', type=int, default=32, metavar='N',
+parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
 parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 10)')
@@ -52,14 +54,14 @@ class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
 
-        self.fc11 = nn.Linear(1024, 800)
+        self.fc11 = nn.Linear(H*W, 800)
         self.fc12 = nn.Linear(312, 100)
         self.fc21 = nn.Linear(800, 312)
         self.fc22 = nn.Linear(800, 312)
         #  self.fc23 = nn.Linear(100, 312)
         #  self.fc24 = nn.Linear(100, 312)
         self.fc3 = nn.Linear(312, 800)
-        self.fc4 = nn.Linear(800, 1024)
+        self.fc4 = nn.Linear(800, H*W)
 
     def encode(self, x):
         h11 = F.relu(self.fc11(x))
@@ -142,15 +144,15 @@ def test(epoch):
     test_loss = 0
     with torch.no_grad():
         for i, data in enumerate(test_loader):
-            data = data.to(device)
+            data = data[:,:1024].to(device)
             recon_batch, mu, logvar = model(data)
-            test_loss += loss_function(recon_batch, data[:,:1024], mu, logvar).item()
-            #  if i == 0:
-                #  n = min(data.size(0), 8)
-                #  comparison = torch.cat([data[:n],
-                                      #  recon_batch.view(args.batch_size, 1, 1024)[:n]])
-                #  save_image(comparison.cpu(),
-                         #  'results/reconstruction_' + str(epoch) + '.png', nrow=n)
+            test_loss += loss_function(recon_batch, data, mu, logvar).item()
+            if i == 0:
+                n = min(data.size(0), 8)
+                comparison = torch.cat([data.view(args.batch_size, 1, H, W)[:n],
+                                      recon_batch.view(args.batch_size, 1, H,W)[:n]])
+                save_image(comparison.cpu(),
+                         'results/reconstruction_' + str(epoch) + '.png', nrow=n)
 
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
@@ -159,8 +161,8 @@ def test(epoch):
 for epoch in range(1, args.epochs + 1):
     train(epoch)
     test(epoch)
-    #  with torch.no_grad():
-        #  sample = torch.randn(64, 20).to(device)
-        #  sample = model.decode(sample).cpu()
-        #  save_image(sample.view(64, 1, 28, 28),
-                   #  'results/sample_' + str(epoch) + '.png')
+    with torch.no_grad():
+        sample = torch.randn(64, 20).to(device)
+        sample = model.decode(sample).cpu()
+        save_image(sample.view(64, 1, H, W),
+                   'results/sample_' + str(epoch) + '.png')

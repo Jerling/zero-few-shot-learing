@@ -6,6 +6,7 @@ from torch import nn, optim
 from torch.nn import functional as F
 #  from torchvision import datasets, transforms
 from torchvision.utils import save_image
+import numpy as np
 import sys
 sys.path.append('./data')
 from datasets import dataloader
@@ -16,7 +17,7 @@ W = 32
 parser = argparse.ArgumentParser(description='VAE MNIST Example')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -43,12 +44,10 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 data = dataloader()
 keys = list(data.keys())
 train_x = data[keys[3]] # (8855, 1024) 
-print(max([max(x) for x in train_x]))
-print(train_x.shape)
 train_att =data[keys[-1]] # (8855, 312) 
-train_loader = torch.utils.data.DataLoader(torch.from_numpy(train_x),
+train_loader = torch.utils.data.DataLoader(torch.from_numpy(np.concatenate((train_x,train_att), axis=1)).float(),
     batch_size=args.batch_size, shuffle=True, **kwargs)
-test_loader = torch.utils.data.DataLoader(torch.from_numpy(train_x),
+test_loader = torch.utils.data.DataLoader(torch.from_numpy(np.concatenate((train_x,train_att), axis=1)).float(),
     batch_size=args.batch_size, shuffle=True, **kwargs)
 
 
@@ -57,24 +56,37 @@ class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
 
-        self.fc1 = nn.Linear(H*W, 400)
-        self.fc21 = nn.Linear(400, 20)
-        self.fc22 = nn.Linear(400, 20)
-        self.fc3 = nn.Linear(20, 400)
-        self.fc4 = nn.Linear(400, H*W)
+        self.fc1 = nn.Linear(H*W, 800)
+        self.fc21 = nn.Linear(800, 400)
+        self.fc22 = nn.Linear(800, 400)
+        self.fc3 = nn.Linear(400, 800)
+        self.fc4 = nn.Linear(800, H*W)
+
+        self.fca = nn.Linear(312, 600, bias=True)
+        self.fca1 = nn.Linear(600, 400, bias=True)
+        self.fca2 = nn.Linear(600, 400, bias=True)
 
     def encode(self, x):
         h1 = F.relu(self.fc1(x))
         return self.fc21(h1), self.fc22(h1)
 
-    def reparameterize(self, mu, logvar):
+    def sample(self, a):
+        ha = F.relu(self.fca(a))
+        return self.fca1(ha), self.fca2(ha)
+
+    def reparameterize(self, mu, logvar, amu, alogvar):
         #  print("mu:",mu.shape)
         #  print("lv:",logvar.shape)
         if self.training:
-            std = torch.exp(0.5*logvar)
+            alogvar = torch.var(alogvar,dim=0)
+            amu = torch.mean(amu,dim=0)
+            #  std = torch.diag(torch.exp(alogvar))
+            #  print(alogvar.size())
+            #  print(std.size())
+            #  print(amu.size())
             #  print("std:",std.shape)
-            eps = torch.randn_like(std)
-            return eps.mul(std).add_(mu)
+            eps = torch.normal(mean=amu,std=alogvar)
+            return eps.mul(logvar).add_(mu)
         else:
             return mu
 
@@ -82,20 +94,24 @@ class VAE(nn.Module):
         h3 = F.relu(self.fc3(z))
         return F.sigmoid(self.fc4(h3))
 
-    def forward(self, x):
+    def forward(self, x, a):
         #  print("x:",x.shape)
         mu, logvar = self.encode(x.view(-1, H*W))
-        z = self.reparameterize(mu, logvar)
+        amu, alogvar = self.sample(a)
+        z = self.reparameterize(mu, logvar, amu, alogvar)
         return self.decode(z), mu, logvar
 
 
 model = VAE().to(device)
-optimizer = optim.Adam(model.parameters(), lr=1e-4)
+optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
 
 # Reconstruction + KL divergence losses summed over all elements and batch
 def loss_function(recon_x, x, mu, logvar):
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, H*W), size_average=False)
+    #  BCE = F.binary_cross_entropy(recon_x, x.view(-1, H*W), size_average=False)
+    m = torch.nn.Sigmoid()
+    loss = torch.nn.BCELoss(size_average=False)
+    BCE = loss(m(recon_x), x)
     #  print("BCE:", BCE.data)
 
     # see Appendix B from VAE paper:
@@ -111,10 +127,13 @@ def loss_function(recon_x, x, mu, logvar):
 def train(epoch):
     model.train()
     train_loss = 0
-    for batch_idx, data in enumerate(train_loader):
+    for batch_idx, data_att in enumerate(train_loader):
+        data = data_att[:,:1024]
+        att = data_att[:,1024:]
         data = data.to(device)
+        #  print(data.size())
         optimizer.zero_grad()
-        recon_batch, mu, logvar = model(data)
+        recon_batch, mu, logvar = model(data, att)
         loss = loss_function(recon_batch, data, mu, logvar)
         loss.backward()
         train_loss += loss.item()
@@ -133,11 +152,13 @@ def test(epoch):
     model.eval()
     test_loss = 0
     with torch.no_grad():
-        for i, data in enumerate(test_loader):
+        for i, data_att in enumerate(test_loader):
+            data = data_att[:,:1024]
+            att = data_att[:,1024:]
             data = data.to(device)
-            recon_batch, mu, logvar = model(data)
+            recon_batch, mu, logvar = model(data, att)
             test_loss += loss_function(recon_batch, data, mu, logvar).item()
-            if i == 0:
+            if i == 0 and epoch % 10 == 0:
                 n = min(data.size(0), 8)
                 comparison = torch.cat([data.view(args.batch_size, 1, H, W)[:n],
                                       recon_batch.view(args.batch_size, 1, H, W)[:n]])
@@ -151,8 +172,9 @@ def test(epoch):
 for epoch in range(1, args.epochs + 1):
     train(epoch)
     test(epoch)
-    with torch.no_grad():
-        sample = torch.randn(64, 20).to(device)
-        sample = model.decode(sample).cpu()
-        save_image(sample.view(64, 1, H, W),
-                   'results/sample_' + str(epoch) + '.png')
+    if epoch % 10 == 0:
+        with torch.no_grad():
+            sample = torch.randn(64, 400).to(device)
+            sample = model.decode(sample).cpu()
+            save_image(sample.view(64, 1, H, W),
+                       'results/sample_' + str(epoch) + '.png')
