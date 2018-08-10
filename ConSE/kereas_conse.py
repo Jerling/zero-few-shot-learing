@@ -3,8 +3,8 @@ sys.path.append(".")
 import numpy as np
 from data.datasets import dataloader
 from keras.models import Sequential
-from keras.layers import Dense, Dropout
-from keras.optimizers import SGD
+from keras.layers import Dense#, Dropout
+from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping
 early_stopping = EarlyStopping(monitor='val_loss', patience=50, verbose=2)
 
@@ -40,23 +40,24 @@ model = Sequential()
 # Dense(64) is a fully-connected layer with 64 hidden units.
 # in the first layer, you must specify the expected input data shape:
 # here, 20-dimensional vectors.
-model.add(Dense(1024, activation='relu', input_dim=2048))
-model.add(Dropout(0.5))
-model.add(Dense(512, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(256, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(256, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(200, activation='softmax'))
+model.add(Dense(200, activation='softmax', input_dim=2048))
+#  model.add(Dropout(0.5))
+#  model.add(Dense(1024, activation='relu'))
+#  model.add(Dropout(0.5))
+#  model.add(Dense(1024, activation='relu'))
+#  model.add(Dropout(0.5))
+#  model.add(Dense(256, activation='relu'))
+#  model.add(Dropout(0.5))
+#  model.add(Dense(200, activation='softmax'))
 
-sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+#  sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = Adam(lr=0.001)
 model.compile(loss='categorical_crossentropy',
               optimizer=sgd,
               metrics=['accuracy'])
 
 history = model.fit(x_train, y_train,
-                    epochs=300, batch_size=128,
+                    epochs=30000, batch_size=128,
                     validation_data=(x_trainval, y_trainval),
                     verbose=2, shuffle=False, callbacks=[early_stopping])
 
